@@ -2,36 +2,30 @@
 FROM eclipse-temurin:21-jdk AS build
 WORKDIR /app
 
-# Copia el wrapper y el pom primero para aprovechar cache
+# 1) Copiamos mvnw y aseguramos permisos +X (y quitamos CRLF si vienen de Windows)
 COPY mvnw ./
-# Asegura permisos de ejecución y elimina CRLF por si viene de Windows
 RUN chmod +x mvnw \
  && sed -i 's/\r$//' mvnw
 
+# 2) Pom y configuración offline
 COPY .mvn .mvn
 COPY pom.xml ./
-
-# Descarga dependencias en modo offline
 RUN ./mvnw -q -DskipTests dependency:go-offline
 
-# Ahora copia el resto del código fuente
+# 3) Código fuente y empaquetado
 COPY src src
-
-# Empaqueta la aplicación
 RUN ./mvnw -q -DskipTests clean package
 
 # ---- Run stage ----
 FROM eclipse-temurin:21-jre
 WORKDIR /app
 
-# Usa el JAR generado (ajusta el nombre si cambia)
+# 4) Copiamos el JAR generado
 COPY --from=build /app/target/app-0.0.1-SNAPSHOT.jar app.jar
 
-# Variable opcional para activar perfiles, ajustes de JVM, etc.
+# 5) Opciones JVM y puerto
 ENV JAVA_OPTS=""
-
-# Railway expone el puerto que necesites; por convención usamos 8080
 EXPOSE 8080
 
-# Lanza la aplicación
+# 6) Arranque
 CMD ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
