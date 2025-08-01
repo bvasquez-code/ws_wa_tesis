@@ -23,6 +23,8 @@ WORKDIR /app
 # 4) Copiamos el JAR generado
 COPY --from=build /app/target/app-0.0.1-SNAPSHOT.jar app.jar
 
+RUN mkdir -p /app/data/tesis
+
 # 5) Opciones JVM y puerto
 ENV JAVA_OPTS=""
 EXPOSE 8080
