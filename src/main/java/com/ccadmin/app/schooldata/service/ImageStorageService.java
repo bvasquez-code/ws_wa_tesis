@@ -12,7 +12,7 @@ import java.util.UUID;
 @Service
 public class ImageStorageService {
 
-    private static final String IMAGE_FOLDER = "F:\\proyectos\\java\\data\\tesis";
+    private static final String IMAGE_FOLDER = "data/tesis";
 
     /**
      * Recibe un Data URL (p.ej. "data:image/png;base64,AAA..."),
