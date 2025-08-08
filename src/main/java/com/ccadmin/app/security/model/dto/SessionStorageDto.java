@@ -2,6 +2,7 @@ package com.ccadmin.app.security.model.dto;
 
 import com.ccadmin.app.person.model.entity.PersonEntity;
 import com.ccadmin.app.security.model.entity.ProfileMenuEntity;
+import com.ccadmin.app.security.model.entity.UserProfileEntity;
 import com.ccadmin.app.user.model.entity.AppMenuEntity;
 
 import java.util.List;
@@ -16,7 +17,7 @@ public class SessionStorageDto {
     public long SessionID;
     public String StoreCod;
     public List<AppMenuEntity> AppMenuPermissions;
-
     public PersonEntity Person;
+    public List<UserProfileEntity> UserProfile;
 
 }

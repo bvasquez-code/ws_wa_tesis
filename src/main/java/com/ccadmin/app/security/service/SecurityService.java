@@ -7,6 +7,7 @@ import com.ccadmin.app.security.model.entity.AppUserEntity;
 import com.ccadmin.app.security.repository.AppSessionRepository;
 import com.ccadmin.app.security.repository.AppUserRepository;
 import com.ccadmin.app.security.repository.ProfileMenuRepository;
+import com.ccadmin.app.security.repository.UserProfileRepository;
 import com.ccadmin.app.shared.service.SessionService;
 import com.ccadmin.app.user.shared.AppMenuShared;
 import jakarta.transaction.Transactional;
@@ -23,6 +24,8 @@ public class SecurityService extends SessionService {
     private AppMenuShared appMenuShared;
     @Autowired
     private PersonShared personShared;
+    @Autowired
+    private UserProfileRepository profileRepository;
 
     @Transactional
     public SessionStorageDto findUserSession() {
@@ -44,6 +47,8 @@ public class SecurityService extends SessionService {
         sessionStorage.StoreCod = getStoreCod();
         sessionStorage.AppMenuPermissions = this.appMenuShared.findByUser(appUser.UserCod);
         sessionStorage.Person = this.personShared.findById(sessionStorage.PersonCod);
+        sessionStorage.UserProfile = this.profileRepository.findAllByUser(appUser.UserCod);
+
         return sessionStorage;
     }
 }
