@@ -4,4 +4,7 @@ public interface ICourseWeaknessDTO {
 
     String getAveragePerformance();
     String getCourse();
+
+    String getDescription();
+    String getType();
 }

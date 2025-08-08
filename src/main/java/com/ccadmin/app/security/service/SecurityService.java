@@ -1,5 +1,6 @@
 package com.ccadmin.app.security.service;
 
+import com.ccadmin.app.person.shared.PersonShared;
 import com.ccadmin.app.security.model.dto.SessionStorageDto;
 import com.ccadmin.app.security.model.entity.AppSessionEntity;
 import com.ccadmin.app.security.model.entity.AppUserEntity;
@@ -20,6 +21,8 @@ public class SecurityService extends SessionService {
     private AppUserRepository appUserRepository;
     @Autowired
     private AppMenuShared appMenuShared;
+    @Autowired
+    private PersonShared personShared;
 
     @Transactional
     public SessionStorageDto findUserSession() {
@@ -40,6 +43,7 @@ public class SecurityService extends SessionService {
         sessionStorage.Names = appUser.Email;
         sessionStorage.StoreCod = getStoreCod();
         sessionStorage.AppMenuPermissions = this.appMenuShared.findByUser(appUser.UserCod);
+        sessionStorage.Person = this.personShared.findById(sessionStorage.PersonCod);
         return sessionStorage;
     }
 }

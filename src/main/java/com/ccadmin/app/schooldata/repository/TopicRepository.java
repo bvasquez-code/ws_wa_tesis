@@ -45,42 +45,111 @@ public interface TopicRepository extends JpaRepository<TopicEntity, Integer>, Cc
     List<IStudentExamAttemptInfoDto> findStudentExamAttemptInfo(@Param("studentId") String studentId);
 
     @Query(value = """
-            select
-            dt.Course as Course,(sum(der.SolvedCorrectly)/count(1))*100 as AveragePerformance
-            from data_exam_results der\s
-            inner join data_exercises de on de.ExerciseID = der.ExerciseID\s
-            inner join data_topics dt on dt.TopicID = de.TopicID\s
-            where der.StudentID = :studentId
-            and dt.status = 'A'
-            group by dt.Course\s
-            union all
-            select
-            'velocidadResolucion' as Tag,(sum(if(t.minutos_diff<t.DurationMinutes,1,0))/count(1))*100 as Percent
-            from (
-            	select
-            	eh.ExamID ,\s
-            	TIMESTAMPDIFF(
-            	    MINUTE,         \s
-            	    eh.CreationDate ,
-            	    eh.FinishDate\s
-            	  ) AS minutos_diff
-            	  ,de.DurationMinutes\s
-            	from data_student_exam_history eh\s
-            	inner join data_exams de on de.ExamID = eh.ExamID\s
-            	where eh.StudentID = :studentId
-            	and eh.IsCompleted = '1'
-            ) t\s
-            union all
-            select 'precisionResolucion' as Tag,avg(d.Percent) as Percent from (
-            select
-            	dt.Course as Tag,(sum(der.SolvedCorrectly)/count(1))*100 as Percent
-            	from data_exam_results der\s
-            	inner join data_exercises de on de.ExerciseID = der.ExerciseID\s
-            	inner join data_topics dt on dt.TopicID = de.TopicID\s
-            	where der.StudentID = :studentId
-            	and dt.status = 'A'
-            	group by dt.Course\s
-            ) d
+            WITH
+               per_course AS (
+                 SELECT
+                   dt.Course AS Tag,
+                   SUM(der.SolvedCorrectly) * 100.0 / COUNT(*) AS Percent
+                 FROM data_exam_results der
+                 JOIN data_exercises    de ON de.ExerciseID = der.ExerciseID
+                 JOIN data_topics       dt ON dt.TopicID    = de.TopicID
+                 WHERE der.StudentID = :studentId
+                   AND dt.Status     = 'A'
+                 GROUP BY dt.Course
+               ),
+               speed AS (
+                 SELECT
+                   'VelocidadResolucion' AS Tag,
+                   SUM(
+                     CASE
+                       WHEN TIMESTAMPDIFF(
+                              MINUTE,
+                              eh.CreationDate,
+                              eh.FinishDate
+                            ) < de.DurationMinutes
+                       THEN 1 ELSE 0
+                     END
+                   ) * 100.0 / COUNT(*) AS Percent
+                 FROM data_student_exam_history eh
+                 JOIN data_exams de ON de.ExamID = eh.ExamID
+                 WHERE eh.StudentID   = :studentId
+                   AND eh.IsCompleted = 1
+               ),
+               precision_res AS (
+                 SELECT
+                   'PrecisionResolucion' AS Tag,
+                   AVG(Percent) AS Percent
+                 FROM per_course
+               ),
+               consistency AS (
+                 SELECT
+                   'ConsistenciaResolucion' AS Tag,
+                   STDDEV_POP(session_percent) AS Percent
+                 FROM (
+                   SELECT
+                     eh.HistoryID,
+                     SUM(der.SolvedCorrectly) * 100.0 / COUNT(*) AS session_percent
+                   FROM data_exam_results          der
+                   JOIN data_student_exam_history eh  ON eh.ExamID = der.ExamID
+                   WHERE der.StudentID = :studentId
+                     AND eh.IsCompleted = 1
+                   GROUP BY eh.HistoryID
+                 ) t
+               ),
+               coverage AS (
+                 SELECT
+                   'CoberturaTematica' AS Tag,
+                   COUNT(DISTINCT dt.TopicID) * 100.0
+                     / (SELECT COUNT(*) FROM data_topics WHERE Status = 'A') AS Percent
+                 FROM data_exam_results der
+                 JOIN data_exercises    de ON de.ExerciseID = der.ExerciseID
+                 JOIN data_topics       dt ON dt.TopicID    = de.TopicID
+                 WHERE der.StudentID = :studentId
+                   AND dt.Status     = 'A'
+               ),
+               improvement AS (
+                 SELECT
+                   'TasaDeMejora' AS Tag,
+                   MAX(session_percent) - MIN(session_percent) AS Percent
+                 FROM (
+                   SELECT
+                     eh.HistoryID,
+                     SUM(der.SolvedCorrectly) * 100.0 / COUNT(*) AS session_percent
+                   FROM data_exam_results          der
+                   JOIN data_student_exam_history eh  ON eh.ExamID = der.ExamID
+                   WHERE der.StudentID = :studentId
+                     AND eh.IsCompleted = 1
+                   GROUP BY eh.HistoryID
+                 ) t
+               ),
+               retention AS (
+                 SELECT
+                   'RetencionDeConocimiento' AS Tag,
+                   SUM(
+                     CASE
+                       WHEN later.SolvedCorrectly = 1 THEN 1 ELSE 0
+                     END
+                   ) * 100.0 / COUNT(*) AS Percent
+                 FROM data_exam_results early
+                 JOIN data_exam_results later
+                   ON early.StudentID  = later.StudentID
+                  AND early.ExerciseID = later.ExerciseID
+                  AND later.CreationDate > early.CreationDate + INTERVAL 7 DAY
+                 WHERE early.StudentID = :studentId
+               )
+              SELECT Tag as Course, IFNULL(Percent,0) as AveragePerformance, 'Course' as Description,'curso' as Type FROM per_course
+              UNION ALL
+              SELECT Tag as Course, IFNULL(Percent,0) as AveragePerformance, 'Velocidad resolución' as Description,'habilidad' as Type FROM speed
+              UNION ALL
+              SELECT Tag as Course, IFNULL(Percent,0) as AveragePerformance, 'Precision resolución' as Description,'habilidad' as Type FROM precision_res
+              UNION ALL
+              SELECT Tag as Course, IFNULL(Percent,0) as AveragePerformance, 'Consistencia resolución' as Description,'habilidad' as Type FROM consistency
+              UNION ALL
+              SELECT Tag as Course, IFNULL(Percent,0) as AveragePerformance, 'Cobertura temática' as Description,'habilidad' as Type FROM coverage
+              UNION ALL
+              SELECT Tag as Course, IFNULL(Percent,0) as AveragePerformance, 'Tasa de mejora' as Description,'habilidad' as Type FROM improvement
+              UNION ALL
+              SELECT Tag as Course, IFNULL(Percent,0) as AveragePerformance, 'Retención de conocimiento' as Description,'habilidad' as Type FROM retention
            """, nativeQuery = true)
     List<ICourseWeaknessDTO> findCourseWeakness(@Param("studentId") String studentId);
 
