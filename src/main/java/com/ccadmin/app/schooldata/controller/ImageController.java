@@ -1,5 +1,6 @@
 package com.ccadmin.app.schooldata.controller;
 
+import com.ccadmin.app.schooldata.model.dto.ImageRegisterMassiveDto;
 import com.ccadmin.app.schooldata.service.ImageStorageService;
 import com.ccadmin.app.shared.model.dto.ResponseWsDto;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 import java.nio.file.NoSuchFileException;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/image")
@@ -22,6 +24,22 @@ public class ImageController {
     public ResponseEntity<ResponseWsDto> upload(@RequestBody String base64Image) {
         try {
             String filename = storageService.saveImage(base64Image);
+            return new ResponseEntity<>(
+                    new ResponseWsDto().okResponse(filename),
+                    HttpStatus.OK
+            );
+        } catch (IOException ex) {
+            return new ResponseEntity<>(
+                    new ResponseWsDto(ex),
+                    HttpStatus.BAD_REQUEST
+            );
+        }
+    }
+
+    @PostMapping("/uploadMassive")
+    public ResponseEntity<ResponseWsDto> uploadAllImage(@RequestBody ImageRegisterMassiveDto request) {
+        try {
+            List<String> filename = storageService.saveImage(request);
             return new ResponseEntity<>(
                     new ResponseWsDto().okResponse(filename),
                     HttpStatus.OK

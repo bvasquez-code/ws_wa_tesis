@@ -69,4 +69,29 @@ public interface StudentExamHistoryRepository extends JpaRepository<StudentExamH
            h where h.ExamID = :ExamID and h.StudentID = :StudentID)
            """, nativeQuery = true)
     StudentExamHistoryEntity findLastExamHistoryByStudentIDExamID(@Param("ExamID") String ExamID,@Param("StudentID") String StudentID);
+
+
+    @Query(value = """
+        select count(1)
+        from data_student_exam_history h
+        where h.StudentID = :studentId
+        """, nativeQuery = true)
+    int countByStudentId(@Param("studentId") String studentId);
+
+    @Query(value = """
+        select * 
+        from data_student_exam_history h
+        where h.StudentID = :studentId
+        order by h.CreationDate desc
+        limit 1
+        """, nativeQuery = true)
+    StudentExamHistoryEntity findLastByStudentId(@Param("studentId") String studentId);
+
+    @Query(value = """
+        select count(1)
+        from data_student_exam_history h
+        where h.StudentID = :studentId
+          and h.IsCompleted = 1
+        """, nativeQuery = true)
+    int countCompletedByStudentId(@Param("studentId") String studentId);
 }

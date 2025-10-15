@@ -1,5 +1,6 @@
 package com.ccadmin.app.schooldata.service;
 
+import com.ccadmin.app.schooldata.model.dto.ImageRegisterMassiveDto;
 import com.ccadmin.app.schooldata.model.entity.ExerciseImageEntity;
 import com.ccadmin.app.schooldata.repository.ExerciseImageRepository;
 import com.ccadmin.app.shared.service.SessionService;
@@ -10,7 +11,9 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Base64;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -31,6 +34,27 @@ public class ImageStorageService extends SessionService {
         // Separa el encabezado "data:image/xxx;base64,"
         String base64 = base64DataUrl.substring(base64DataUrl.indexOf(',') + 1);
         String filename = UUID.randomUUID().toString() + ".png";
+        if(flgSavePhysicalPath){
+            this.savePhysicalPath(filename,base64);
+        }
+        ExerciseImageEntity exerciseImage = new ExerciseImageEntity(filename,base64);
+        exerciseImage.addSession(getUserCod());
+        this.exerciseImageRepository.save(exerciseImage);
+        return filename;
+    }
+
+    public List<String> saveImage(ImageRegisterMassiveDto request) throws IOException {
+        List<String> rptImg = new ArrayList<>();
+        for(var item : request.imageList){
+            String nameImg = saveImage(item.base64Image,item.filename);
+            rptImg.add(nameImg);
+        }
+        return rptImg;
+    }
+
+    public String saveImage(String base64DataUrl,String filename) throws IOException {
+        // Separa el encabezado "data:image/xxx;base64,"
+        String base64 = base64DataUrl.substring(base64DataUrl.indexOf(',') + 1);
         if(flgSavePhysicalPath){
             this.savePhysicalPath(filename,base64);
         }

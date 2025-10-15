@@ -4,10 +4,12 @@ package com.ccadmin.app.schooldata.service;
 import com.ccadmin.app.person.model.entity.PersonEntity;
 import com.ccadmin.app.person.repository.PersonRepository;
 import com.ccadmin.app.schooldata.exception.EntityBuildException;
+import com.ccadmin.app.schooldata.model.dto.StudentExamHistoryStatusDto;
 import com.ccadmin.app.schooldata.model.dto.StudentRegisterDto;
 import com.ccadmin.app.schooldata.model.dto.StudentRegisterMassiveDto;
 import com.ccadmin.app.schooldata.model.dto.StudentRegisterWithUserDto;
 import com.ccadmin.app.schooldata.model.entity.StudentEntity;
+import com.ccadmin.app.schooldata.repository.StudentExamHistoryRepository;
 import com.ccadmin.app.schooldata.repository.StudentRepository;
 import com.ccadmin.app.security.model.entity.AppUserEntity;
 import com.ccadmin.app.security.model.entity.UserProfileEntity;
@@ -33,6 +35,8 @@ public class StudentService extends SessionService {
 
     @Autowired
     private StudentRepository studentRepository;
+    @Autowired
+    private StudentExamHistoryRepository studentExamHistoryRepository;
 
     @Autowired
     private AppUserService appUserService;
@@ -156,5 +160,30 @@ public class StudentService extends SessionService {
 
         rpt.AddResponseAdditional("message", "Estudiante y usuario creados exitosamente");
         return rpt;
+    }
+
+    public StudentExamHistoryStatusDto getExamHistoryStatus(String studentId) {
+        StudentExamHistoryStatusDto dto = new StudentExamHistoryStatusDto();
+        dto.StudentID = studentId;
+
+        int total = this.studentExamHistoryRepository.countByStudentId(studentId);
+        dto.TotalAttempts = total;
+        dto.HasHistory = total > 0;
+
+        if (dto.HasHistory) {
+            var last = this.studentExamHistoryRepository.findLastByStudentId(studentId);
+            dto.LastHistoryID = last.HistoryID;
+            dto.LastExamID = last.ExamID;
+
+            int completed = this.studentExamHistoryRepository.countCompletedByStudentId(studentId);
+            dto.CompletedAttempts = completed;
+            dto.InProgressAttempts = total - completed;
+        } else {
+            dto.LastHistoryID = null;
+            dto.LastExamID = null;
+            dto.CompletedAttempts = 0;
+            dto.InProgressAttempts = 0;
+        }
+        return dto;
     }
 }

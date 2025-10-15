@@ -83,4 +83,14 @@ public class StudentController {
             return new ResponseEntity<>(new ResponseWsDto(ex), HttpStatus.BAD_REQUEST);
         }
     }
+
+    @GetMapping("checkHistory")
+    public ResponseEntity<ResponseWsDto> checkHistory(@RequestParam String StudentID) {
+        try {
+            var status = this.studentService.getExamHistoryStatus(StudentID);
+            return new ResponseEntity<>(new ResponseWsDto(status), HttpStatus.OK);
+        } catch (Exception ex) {
+            return new ResponseEntity<>(new ResponseWsDto(ex), HttpStatus.BAD_REQUEST);
+        }
+    }
 }
