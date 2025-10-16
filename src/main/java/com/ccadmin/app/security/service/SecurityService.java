@@ -12,6 +12,7 @@ import com.ccadmin.app.shared.service.SessionService;
 import com.ccadmin.app.user.shared.AppMenuShared;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -50,5 +51,9 @@ public class SecurityService extends SessionService {
         sessionStorage.UserProfile = this.profileRepository.findAllByUser(appUser.UserCod);
 
         return sessionStorage;
+    }
+
+    public boolean userHasTheProfile(String UserCod,String ProfileCod){
+        return this.profileRepository.userHasTheProfile(UserCod,ProfileCod) > 0;
     }
 }

@@ -9,4 +9,5 @@ public class StudentExamHistoryStatusDto {
     public Integer InProgressAttempts;
     public Integer LastHistoryID; // último intento
     public String LastExamID;
+    public boolean IsMaster;
 }

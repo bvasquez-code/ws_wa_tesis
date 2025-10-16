@@ -26,4 +26,15 @@ public interface UserProfileRepository extends JpaRepository<UserProfileEntity, 
             select * from user_profile up where up.Status = 'A' and up.UserCod = :UserCod
             """,nativeQuery = true)
     public List<UserProfileEntity> findAllByUser(@Param("UserCod")String UserCod);
+
+    @Query( value = """
+            select count(1) from user_profile up
+            where up.UserCod = :UserCod
+            and up.ProfileCod = :ProfileCod
+            and up.Status = 'A'
+            """,nativeQuery = true)
+    public int userHasTheProfile(
+            @Param("UserCod")String UserCod,
+            @Param("ProfileCod")String ProfileCod
+    );
 }

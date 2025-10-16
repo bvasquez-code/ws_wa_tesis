@@ -2,7 +2,6 @@ package com.ccadmin.app.schooldata.service;
 
 
 import com.ccadmin.app.person.model.entity.PersonEntity;
-import com.ccadmin.app.person.repository.PersonRepository;
 import com.ccadmin.app.schooldata.exception.EntityBuildException;
 import com.ccadmin.app.schooldata.model.dto.StudentExamHistoryStatusDto;
 import com.ccadmin.app.schooldata.model.dto.StudentRegisterDto;
@@ -11,11 +10,11 @@ import com.ccadmin.app.schooldata.model.dto.StudentRegisterWithUserDto;
 import com.ccadmin.app.schooldata.model.entity.StudentEntity;
 import com.ccadmin.app.schooldata.repository.StudentExamHistoryRepository;
 import com.ccadmin.app.schooldata.repository.StudentRepository;
+import com.ccadmin.app.security.model.dto.SessionStorageDto;
 import com.ccadmin.app.security.model.entity.AppUserEntity;
 import com.ccadmin.app.security.model.entity.UserProfileEntity;
-import com.ccadmin.app.security.repository.AppUserRepository;
-import com.ccadmin.app.security.repository.UserProfileRepository;
 import com.ccadmin.app.security.service.AppUserService;
+import com.ccadmin.app.security.service.SecurityService;
 import com.ccadmin.app.shared.model.dto.ResponsePageSearchT;
 import com.ccadmin.app.shared.model.dto.ResponseWsDto;
 import com.ccadmin.app.shared.model.dto.SearchDto;
@@ -37,11 +36,12 @@ public class StudentService extends SessionService {
     private StudentRepository studentRepository;
     @Autowired
     private StudentExamHistoryRepository studentExamHistoryRepository;
-
     @Autowired
     private AppUserService appUserService;
+    @Autowired
+    private SecurityService securityService;
 
-    private SearchTService<StudentEntity> searchTService;
+    private SearchTService searchTService;
 
     public StudentEntity findById(String StudentID) {
         Optional<StudentEntity> student = this.studentRepository.findById(StudentID);
@@ -163,8 +163,13 @@ public class StudentService extends SessionService {
     }
 
     public StudentExamHistoryStatusDto getExamHistoryStatus(String studentId) {
+
+        SessionStorageDto sessionStorage =  securityService.findUserSession();
+
         StudentExamHistoryStatusDto dto = new StudentExamHistoryStatusDto();
         dto.StudentID = studentId;
+
+        boolean isMaster = this.securityService.userHasTheProfile(studentId,"maestro");
 
         int total = this.studentExamHistoryRepository.countByStudentId(studentId);
         dto.TotalAttempts = total;
@@ -178,11 +183,13 @@ public class StudentService extends SessionService {
             int completed = this.studentExamHistoryRepository.countCompletedByStudentId(studentId);
             dto.CompletedAttempts = completed;
             dto.InProgressAttempts = total - completed;
+            dto.IsMaster = isMaster;
         } else {
             dto.LastHistoryID = null;
             dto.LastExamID = null;
             dto.CompletedAttempts = 0;
             dto.InProgressAttempts = 0;
+            dto.IsMaster = isMaster;
         }
         return dto;
     }
