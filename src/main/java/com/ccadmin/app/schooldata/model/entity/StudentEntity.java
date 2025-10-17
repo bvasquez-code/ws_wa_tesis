@@ -24,6 +24,7 @@ public class StudentEntity extends AuditTableEntity implements Serializable {
     public Date EnrollmentDate;
     public String GradeLevel;
     public String RegistrationUrl;
+    public String HasAccount;
 
     public StudentEntity() {}
 
