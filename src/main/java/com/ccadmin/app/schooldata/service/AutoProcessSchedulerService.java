@@ -5,6 +5,7 @@ import com.ccadmin.app.schooldata.model.entity.DataAutoProcessExecEntity;
 import com.ccadmin.app.schooldata.repository.DataAutoProcessExecRepository;
 import com.ccadmin.app.schooldata.repository.DataAutoProcessRepository;
 import jakarta.annotation.PostConstruct;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.scheduling.support.CronExpression;
@@ -17,6 +18,7 @@ import java.time.ZonedDateTime;
 import java.util.Date;
 import java.util.List;
 
+@Slf4j
 @Service
 public class AutoProcessSchedulerService {
 
@@ -44,6 +46,7 @@ public class AutoProcessSchedulerService {
         ZonedDateTime now = ZonedDateTime.now(zone);
         ZonedDateTime windowEnd = now.plusHours(1);
 
+        log.info("VERIFICANDO_EXISTE_PROCESO_AUT -->> {}",now);
         List<DataAutoProcessEntity> actives = this.processRepository.findAllActive();
 
         for (var p : actives) {
@@ -52,6 +55,7 @@ public class AutoProcessSchedulerService {
                     // Lanzar en paralelo con HILO VIRTUAL nativo de Java 21
                     Thread.startVirtualThread(() -> {
                         try {
+                            log.info("EJECUTANDO_PROCESO -->> {}",p.ProcessCode);
                             executeProcess(p, "A"); // A = Automático
                         } catch (Exception ignored) {}
                     });
@@ -109,7 +113,7 @@ public class AutoProcessSchedulerService {
                 ZonedDateTime next = cron.next(now.minusSeconds(1)); // por si toca "ahora"
                 return next != null && !next.isAfter(windowEnd);
             } catch (Exception ignore) {
-                // si cron inválido, cae a IntervalMin
+                log.info("CONVERT_CRON_EXPR -->> {}",ignore.getMessage());
             }
         }
 
