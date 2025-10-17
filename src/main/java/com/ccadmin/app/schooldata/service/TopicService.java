@@ -3,6 +3,7 @@ package com.ccadmin.app.schooldata.service;
 import com.ccadmin.app.schooldata.model.dto.TopicRegisterDto;
 import com.ccadmin.app.schooldata.model.dto.TopicRegisterMassiveDto;
 import com.ccadmin.app.schooldata.model.entity.TopicEntity;
+import com.ccadmin.app.schooldata.repository.CourseRepository;
 import com.ccadmin.app.schooldata.repository.TopicRepository;
 import com.ccadmin.app.shared.model.dto.ResponsePageSearchT;
 import com.ccadmin.app.shared.model.dto.ResponseWsDto;
@@ -21,6 +22,8 @@ public class TopicService {
 
     @Autowired
     private TopicRepository topicRepository;
+    @Autowired
+    private CourseRepository courseRepository;
 
     private SearchTService<TopicEntity> searchTService;
 
@@ -83,6 +86,7 @@ public class TopicService {
             TopicRegisterDto topicRegister = new TopicRegisterDto();
             topicRegister.topic = this.findById(TopicID);
             rpt.AddResponseAdditional("topic", topicRegister);
+            rpt.AddResponseAdditional("course",this.courseRepository.findAllActive());
         }
         return rpt;
     }
