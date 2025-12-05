@@ -47,15 +47,40 @@ public interface TopicRepository extends JpaRepository<TopicEntity, Integer>, Cc
     @Query(value = """
             WITH
                per_course AS (
-                 SELECT
-                   dt.Course AS Tag,
-                   SUM(der.SolvedCorrectly) * 100.0 / COUNT(*) AS Percent
-                 FROM data_exam_results der
-                 JOIN data_exercises    de ON de.ExerciseID = der.ExerciseID
-                 JOIN data_topics       dt ON dt.TopicID    = de.TopicID
-                 WHERE der.StudentID = :studentId
-                   AND dt.Status     = 'A'
-                 GROUP BY dt.Course
+                    WITH course_stats AS (
+                        SELECT
+                            dt.Course AS Tag,
+                            SUM(der.SolvedCorrectly) AS CorrectAnswers,
+                            COUNT(*) AS AnsweredQuestions
+                        FROM data_exam_results der
+                        JOIN data_exercises    de ON de.ExerciseID = der.ExerciseID
+                        JOIN data_topics       dt ON dt.TopicID    = de.TopicID
+                        WHERE der.StudentID = :studentId
+                          AND dt.Status     = 'A'
+                        GROUP BY dt.Course
+                    ),
+                    course_topics AS (
+                        SELECT
+                            Course AS Tag,
+                            COUNT(*) AS TotalTopics
+                        FROM data_topics
+                        WHERE Status = 'A'
+                        GROUP BY Course
+                    )
+                    SELECT
+                        cs.Tag,
+                        CASE
+                            WHEN cs.AnsweredQuestions = 0
+                                 OR ct.TotalTopics = 0 THEN 0
+                            WHEN cs.AnsweredQuestions >= ct.TotalTopics * 10
+                                -- Tiene suficientes preguntas, usamos porcentaje real
+                                THEN cs.CorrectAnswers * 100.0 / cs.AnsweredQuestions
+                            ELSE
+                                -- Tiene menos preguntas que el mínimo, penalizamos
+                                cs.CorrectAnswers * 100.0 / (ct.TotalTopics * 10)
+                        END AS Percent
+                    FROM course_stats cs
+                    JOIN course_topics ct ON ct.Tag = cs.Tag
                ),
                speed AS (
                  SELECT
