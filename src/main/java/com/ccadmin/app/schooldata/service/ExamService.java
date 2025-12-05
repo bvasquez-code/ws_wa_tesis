@@ -172,7 +172,7 @@ public class ExamService {
 
         // Ordenar la lista por compositeScore (los más débiles tendrán menor score).
         topicsList.sort(Comparator.comparingDouble(t -> t.CompositeScore));
-        List<WeakTopicDTO> weakestTopics = topicsList.stream().limit(10).collect(Collectors.toList());
+        List<WeakTopicDTO> weakestTopics = topicsList.stream().limit(100).collect(Collectors.toList());
 
         // Agrupar por curso y calcular el promedio de compositeScore para cada curso.
         Map<String, List<WeakTopicDTO>> topicsByCourse = topicsList.stream()

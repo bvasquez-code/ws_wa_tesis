@@ -54,6 +54,9 @@ public interface StudentTopicPerformanceRepository extends JpaRepository<Student
     @Query(value = """
        select * from student_topic_performance stp
        where stp.StudentID = :studentId
+       and stp.TopicID in (
+        select dt.TopicID  from data_topics dt where dt.Status = 'A'
+       )
        """, nativeQuery = true)
     List<StudentTopicPerformanceEntity> findByStudentID(@Param("studentId") String studentId);
 }
