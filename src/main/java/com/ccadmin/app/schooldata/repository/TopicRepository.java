@@ -2,6 +2,7 @@ package com.ccadmin.app.schooldata.repository;
 
 import com.ccadmin.app.schooldata.model.entity.TopicEntity;
 import com.ccadmin.app.schooldata.model.idto.ICourseWeaknessDTO;
+import com.ccadmin.app.schooldata.model.idto.IExamResults;
 import com.ccadmin.app.schooldata.model.idto.IStudentExamAttemptInfoDto;
 import com.ccadmin.app.shared.interfaceccadmin.CcAdminRepository;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -177,6 +178,17 @@ public interface TopicRepository extends JpaRepository<TopicEntity, Integer>, Cc
               SELECT Tag as Course, IFNULL(Percent,0) as AveragePerformance, 'Retención de conocimiento' as Description,'habilidad' as Type FROM retention
            """, nativeQuery = true)
     List<ICourseWeaknessDTO> findCourseWeakness(@Param("studentId") String studentId);
+
+
+    @Query( value = """
+            SELECT
+                COUNT(*) AS TotalSolved,
+                SUM(CASE WHEN der.SolvedCorrectly = 1 THEN 1 ELSE 0 END) AS TotalCorrect,
+                SUM(CASE WHEN der.SolvedCorrectly = 0 THEN 1 ELSE 0 END) AS TotalIncorrect
+            FROM data_exam_results der
+            WHERE der.StudentID = :studentId
+            """, nativeQuery = true)
+    IExamResults findExamResults(@Param("studentId") String studentId);
 
 
 }

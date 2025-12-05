@@ -4,6 +4,7 @@ import com.ccadmin.app.schooldata.model.dto.*;
 import com.ccadmin.app.schooldata.model.entity.*;
 import com.ccadmin.app.schooldata.model.idto.ICourseWeaknessDTO;
 import com.ccadmin.app.schooldata.model.idto.IExamResultStatsDto;
+import com.ccadmin.app.schooldata.model.idto.IExamResults;
 import com.ccadmin.app.schooldata.model.idto.IStudentExamAttemptInfoDto;
 import com.ccadmin.app.schooldata.repository.*;
 import com.ccadmin.app.shared.model.dto.ResponsePageSearchT;
@@ -192,10 +193,13 @@ public class ExamService {
 
         List<ICourseWeaknessDTO> ICourseRanking = topicRepository.findCourseWeakness(studentId);
 
+        IExamResults examResults = topicRepository.findExamResults(studentId);
+
         StudentWeakTopicsResponseDTO response = new StudentWeakTopicsResponseDTO();
         response.WeakestTopics = weakestTopics;
         response.CourseWeaknessRanking = ICourseRanking;
         response.ExamAttemptInfo = attemptInfo;
+        response.ExamResults = examResults;
         return response;
     }
 }
