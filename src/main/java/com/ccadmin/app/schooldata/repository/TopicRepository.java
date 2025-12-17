@@ -41,6 +41,7 @@ public interface TopicRepository extends JpaRepository<TopicEntity, Integer>, Cc
            inner join data_exercises de on de.TopicID = dt.TopicID 
            left join (select * from data_exam_results er where er.StudentID = :studentId) rs on rs.ExerciseID = de.ExerciseID
            where dt.status = 'A'
+           and dt.TopicID in ('1.1','1.2','1.3','1.11','1.4','1.5','1.7')
            group by dt.Course, dt.TopicID, dt.Name
            """, nativeQuery = true)
     List<IStudentExamAttemptInfoDto> findStudentExamAttemptInfo(@Param("studentId") String studentId);
