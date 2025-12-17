@@ -2,6 +2,7 @@ package com.ccadmin.app.schooldata.repository;
 
 
 import com.ccadmin.app.schooldata.model.entity.StudentEntity;
+import com.ccadmin.app.schooldata.model.idto.IStudentExamPointsSummaryDto;
 import com.ccadmin.app.shared.interfaceccadmin.CcAdminRepository;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -34,4 +35,22 @@ public interface StudentRepository extends JpaRepository<StudentEntity, String>,
             CALL db_sys_expert.get_cod_seq_lib(1)
             """,nativeQuery = true)
     public String getStudentCodNew();
+
+    @Query(value = """
+            select *
+            from data_students ds
+            where ds.CreationUser = :creationUser
+            """, nativeQuery = true)
+    List<StudentEntity> findByCreationUser(@Param("creationUser") String creationUser);
+
+    @Query(value = """
+            select tmp.ExamID,tmp.PointsOnExam,h.CreationDate  from data_student_exam_history h
+            inner join (
+            select der.ExamID,sum(der.PointsObtained) as PointsOnExam
+            from data_exam_results der
+            where der.StudentID = :studentId
+            GROUP by der.ExamID
+            ) tmp  on tmp.ExamID = h.ExamID
+            """, nativeQuery = true)
+    List<IStudentExamPointsSummaryDto> findExamPointsSummary(@Param("studentId") String studentId);
 }

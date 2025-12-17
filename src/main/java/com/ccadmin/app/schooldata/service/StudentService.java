@@ -8,6 +8,7 @@ import com.ccadmin.app.schooldata.model.dto.StudentRegisterDto;
 import com.ccadmin.app.schooldata.model.dto.StudentRegisterMassiveDto;
 import com.ccadmin.app.schooldata.model.dto.StudentRegisterWithUserDto;
 import com.ccadmin.app.schooldata.model.entity.StudentEntity;
+import com.ccadmin.app.schooldata.model.idto.IStudentExamPointsSummaryDto;
 import com.ccadmin.app.schooldata.repository.StudentExamHistoryRepository;
 import com.ccadmin.app.schooldata.repository.StudentRepository;
 import com.ccadmin.app.security.model.dto.SessionStorageDto;
@@ -192,5 +193,13 @@ public class StudentService extends SessionService {
             dto.IsMaster = isMaster;
         }
         return dto;
+    }
+
+    public java.util.List<StudentEntity> findByCreationUser(String creationUser) {
+        return this.studentRepository.findByCreationUser(creationUser);
+    }
+
+    public java.util.List<IStudentExamPointsSummaryDto> findExamPointsSummary(String studentId) {
+        return this.studentRepository.findExamPointsSummary(studentId);
     }
 }

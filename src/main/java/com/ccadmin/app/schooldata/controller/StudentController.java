@@ -93,4 +93,24 @@ public class StudentController {
             return new ResponseEntity<>(new ResponseWsDto(ex), HttpStatus.BAD_REQUEST);
         }
     }
+
+    @GetMapping("findByCreationUser")
+    public ResponseEntity<ResponseWsDto> findByCreationUser(@RequestParam String CreationUser) {
+        try {
+            var list = this.studentService.findByCreationUser(CreationUser);
+            return new ResponseEntity<>(new ResponseWsDto(list), HttpStatus.OK);
+        } catch (Exception ex) {
+            return new ResponseEntity<>(new ResponseWsDto(ex), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @GetMapping("findExamPointsSummary")
+    public ResponseEntity<ResponseWsDto> findExamPointsSummary(@RequestParam String StudentID) {
+        try {
+            var list = this.studentService.findExamPointsSummary(StudentID);
+            return new ResponseEntity<>(new ResponseWsDto(list), HttpStatus.OK);
+        } catch (Exception ex) {
+            return new ResponseEntity<>(new ResponseWsDto(ex), HttpStatus.BAD_REQUEST);
+        }
+    }
 }
